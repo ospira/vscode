@@ -409,19 +409,19 @@ export class NativeHostMainService extends Disposable implements INativeHostMain
 	//#region Dialog
 
 	async showMessageBox(windowId: number | undefined, options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
-		const window = this.getTargetWindow(windowId);
+		const window = this.preferActiveWindow(windowId);
 
 		return this.dialogMainService.showMessageBox(options, window?.win ?? undefined);
 	}
 
 	async showSaveDialog(windowId: number | undefined, options: SaveDialogOptions): Promise<SaveDialogReturnValue> {
-		const window = this.getTargetWindow(windowId);
+		const window = this.preferActiveWindow(windowId);
 
 		return this.dialogMainService.showSaveDialog(options, window?.win ?? undefined);
 	}
 
 	async showOpenDialog(windowId: number | undefined, options: OpenDialogOptions): Promise<OpenDialogReturnValue> {
-		const window = this.getTargetWindow(windowId);
+		const window = this.preferActiveWindow(windowId);
 
 		return this.dialogMainService.showOpenDialog(options, window?.win ?? undefined);
 	}
@@ -782,13 +782,13 @@ export class NativeHostMainService extends Disposable implements INativeHostMain
 	//#region Development
 
 	async openDevTools(windowId: number | undefined, options?: OpenDevToolsOptions): Promise<void> {
-		const window = this.getTargetWindow(windowId);
+		const window = this.preferActiveWindow(windowId);
 
 		window?.win?.webContents.openDevTools(options);
 	}
 
 	async toggleDevTools(windowId: number | undefined): Promise<void> {
-		const window = this.getTargetWindow(windowId);
+		const window = this.preferActiveWindow(windowId);
 
 		window?.win?.webContents.toggleDevTools();
 	}
@@ -827,8 +827,8 @@ export class NativeHostMainService extends Disposable implements INativeHostMain
 
 	//#endregion
 
-	private windowById(windowId: number | undefined, fallbackCodeWindowId?: number): ICodeWindow | IAuxiliaryWindow | undefined {
-		return this.codeWindowById(windowId) ?? this.auxiliaryWindowById(windowId) ?? this.codeWindowById(fallbackCodeWindowId);
+	private windowById(windowId: number | undefined, fallbackMainWindowId?: number): ICodeWindow | IAuxiliaryWindow | undefined {
+		return this.codeWindowById(windowId) ?? this.auxiliaryWindowById(windowId) ?? this.codeWindowById(fallbackMainWindowId);
 	}
 
 	private codeWindowById(windowId: number | undefined): ICodeWindow | undefined {
@@ -847,12 +847,17 @@ export class NativeHostMainService extends Disposable implements INativeHostMain
 		return this.auxiliaryWindowsMainService.getWindowById(windowId);
 	}
 
-	private getTargetWindow(fallbackWindowId: number | undefined): ICodeWindow | IAuxiliaryWindow | undefined {
-		let window = this.instantiationService.invokeFunction(getFocusedOrLastActiveWindow);
-		if (!window) {
-			window = this.windowById(fallbackWindowId);
+	private preferActiveWindow(requestingMainWindowId: number | undefined): ICodeWindow | IAuxiliaryWindow | undefined {
+		const candidateWindowId = this.instantiationService.invokeFunction(getFocusedOrLastActiveWindow)?.id;
+		const candidateAuxiliaryWindow = this.auxiliaryWindowById(candidateWindowId);
+
+		// We have an auxiliary window as candidate but we can only
+		// return it if it is parented to the requesting main window
+		if (candidateAuxiliaryWindow?.parentId === requestingMainWindowId) {
+			return candidateAuxiliaryWindow;
 		}
 
-		return window;
+		// In all other cases, fallback to the requesting main window
+		return this.codeWindowById(requestingMainWindowId);
 	}
 }
