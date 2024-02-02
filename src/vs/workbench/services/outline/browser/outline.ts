@@ -49,6 +49,7 @@ export interface IOutlineComparator<E> {
 export interface IQuickPickOutlineElement<E> {
 	readonly element: E;
 	readonly label: string;
+	readonly filterStartIndex?: number;
 	readonly iconClasses?: string[];
 	readonly ariaLabel?: string;
 	readonly description?: string;

@@ -28,6 +28,7 @@ export interface IQuickPickItem {
 	type?: 'item';
 	id?: string;
 	label: string;
+	filterStartIndex?: number;
 	ariaLabel?: string;
 	description?: string;
 	detail?: string;

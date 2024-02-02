@@ -18,9 +18,8 @@ import { timeout } from 'vs/base/common/async';
 import { CancellationToken, CancellationTokenSource } from 'vs/base/common/cancellation';
 import { registerAction2, Action2, MenuId } from 'vs/platform/actions/common/actions';
 import { KeyMod, KeyCode } from 'vs/base/common/keyCodes';
-import { prepareQuery } from 'vs/base/common/fuzzyScorer';
+import { prepareQuery, scoreFuzzy2 } from 'vs/base/common/fuzzyScorer';
 import { SymbolKind } from 'vs/editor/common/languages';
-import { fuzzyScore, createMatches } from 'vs/base/common/filters';
 import { onUnexpectedError } from 'vs/base/common/errors';
 import { ServicesAccessor } from 'vs/platform/instantiation/common/instantiation';
 import { KeybindingWeight } from 'vs/platform/keybinding/common/keybindingsRegistry';
@@ -172,6 +171,7 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 					index: idx,
 					score: 0,
 					label: entry.label,
+					filterStartIndex: entry.filterStartIndex,
 					description: entry.description,
 					ariaLabel: entry.ariaLabel,
 					iconClasses: entry.iconClasses
@@ -194,12 +194,13 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 						item.highlights = undefined;
 						return true;
 					}
-					const score = fuzzyScore(picker.value, picker.value.toLowerCase(), 1 /*@-character*/, item.label, item.label.toLowerCase(), 0, { firstMatchCanBeWeak: true, boostFullMatch: true });
-					if (!score) {
+					const query = prepareQuery(picker.value.substring(AbstractGotoSymbolQuickAccessProvider.PREFIX.length).trim());
+					const [symbolScore, symbolMatches] = scoreFuzzy2(item.label, query, 0, item.filterStartIndex);
+					if (typeof symbolScore !== 'number') {
 						return false;
 					}
-					item.score = score[1];
-					item.highlights = { label: createMatches(score) };
+					item.score = symbolScore;
+					item.highlights = { label: symbolMatches };
 					return true;
 				});
 				if (filteredItems.length === 0) {
