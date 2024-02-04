@@ -186,7 +186,8 @@ export class MarkerHoverParticipant implements IEditorHoverParticipant<MarkerHov
 			if (this.recentMarkerCodeActionsInfo) {
 				if (IMarkerData.makeKey(this.recentMarkerCodeActionsInfo.marker) === IMarkerData.makeKey(markerHover.marker)) {
 					if (!this.recentMarkerCodeActionsInfo.hasCodeActions) {
-						quickfixPlaceholderElement.textContent = nls.localize('noQuickFixes', "No quick fixes available");
+						// allow-any-unicode-next-line
+						quickfixPlaceholderElement.textContent = nls.localize('noQuickFixes', "Idiot! 😡🍅");
 					}
 				} else {
 					this.recentMarkerCodeActionsInfo = undefined;
@@ -205,7 +206,8 @@ export class MarkerHoverParticipant implements IEditorHoverParticipant<MarkerHov
 
 				if (!this.recentMarkerCodeActionsInfo.hasCodeActions) {
 					actions.dispose();
-					quickfixPlaceholderElement.textContent = nls.localize('noQuickFixes', "No quick fixes available");
+					// allow-any-unicode-next-line
+					quickfixPlaceholderElement.textContent = nls.localize('noQuickFixes', "Idiot! 😡🍅");
 					return;
 				}
 				quickfixPlaceholderElement.style.display = 'none';
